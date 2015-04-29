@@ -31,15 +31,17 @@ class Auction(object):
     def __init__(self, auction_id):
         self.auction_id = auction_id
         self.participants = None
-        self.bids = None
+        self.bids = []
 
+        self.merchandise_list = []
         # Main merchandise category (mode)
         self.merchandise = None
         # Range from first to last bid
         self.active_range = None
 
     def add_bid(self, bid):
-        pass
+        self.bids.append(bid)
+        # todo
         # add bid to list (keep order by time)
         # update the active range
 
@@ -61,10 +63,9 @@ class Bidder(object):
 
     def add_bid(self, bid):
         # Ghetto ordered default dict
-        if bid.auction not in self.bids_by_auction.keys:
+        if bid.auction not in self.bids_by_auction.keys():
             self.bids_by_auction[bid.auction] = []
         self.bids_by_auction[bid.auction].append(bid)
-
 
     def __str__(self):
         return '\t'.join([

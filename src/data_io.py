@@ -20,3 +20,6 @@ def load_bids(small=False):
 
 def load_train():
     return pd.io.parsers.read_csv(TRAIN_PATH)
+
+def load_test():
+    return pd.io.parsers.read_csv(TEST_PATH)
