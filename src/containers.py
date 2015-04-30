@@ -1,7 +1,13 @@
 from collections import OrderedDict
+from src.encoders import Encoders
 
 
 class Bid(object):
+    __slots__ = ['bid_id', 'bidder_id', 'auction_id',
+                 'merchandise', 'device', 'time',
+                 'country', 'ip', 'url',
+                 'bidder', 'auction']
+
     def __init__(self,
                  bid_id, bidder_id,
                  auction_id, merchandise,
@@ -10,10 +16,10 @@ class Bid(object):
         self.bid_id = bid_id
         self.bidder_id = bidder_id
         self.auction_id = auction_id
-        self.merchandise = merchandise
-        self.device = device
+        self.merchandise = Encoders['merchandise'].transform((merchandise,))[0]
+        self.device = device.replace('phone', '')
         self.time = time
-        self.country = country
+        self.country = Encoders['country'].transform((country,))[0]
         self.ip = ip
         self.url = url
 
@@ -28,6 +34,9 @@ class Bid(object):
 class Auction(object):
     """ A item for auction
     """
+    __slots__ = ['auction_id', 'participants', 'bids',
+                 'merchandise_list', 'merchandise', 'active_range']
+
     def __init__(self, auction_id):
         self.auction_id = auction_id
         self.participants = None
@@ -50,6 +59,9 @@ class Auction(object):
 
 
 class Bidder(object):
+    __slots__ = ['bidder_id', 'true_outcome', 'pred_outcome',
+                 'bids_by_auction']
+
     def __init__(self, bidder_id,
                  # payment_account, address,
                  outcome=None):
