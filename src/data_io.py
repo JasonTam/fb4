@@ -15,9 +15,10 @@ SMALL_BIDS_PATH = os.path.join(DATA_DIR, 'small_bids.csv')
 
 def load_bids(small=False):
     if small:
-        return pd.io.parsers.read_csv(SMALL_BIDS_PATH)
+        bids_df = pd.io.parsers.read_csv(SMALL_BIDS_PATH)
     else:
-        return pd.io.parsers.read_csv(BIDS_PATH)
+        bids_df = pd.io.parsers.read_csv(BIDS_PATH)
+    return bids_df.fillna('nan')  # Replace NaN float with 'nan' str
 
 
 def load_train():
