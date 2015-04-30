@@ -23,13 +23,16 @@ def load_bids(small=False):
 def load_train():
     return pd.io.parsers.read_csv(TRAIN_PATH)
 
+
 def load_test():
     return pd.io.parsers.read_csv(TEST_PATH)
+
 
 def save_encoders(enc_dict, name='encoders.p'):
     p = os.path.join(SAVED_DIR, name)
     pickle.dump(enc_dict, open(p, 'wb'))
     return p
+
 
 def load_encoders(name='encoders.p'):
     p = os.path.join(SAVED_DIR, name)
