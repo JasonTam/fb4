@@ -51,7 +51,7 @@ if __name__ == '__main__':
         auctions_d=auctions_d,
         bidders_d=bidders_d)
 
-    bids_df = data_io.load_bids(small=True)
+    bids_df = data_io.load_bids(small=False)
     bids_df.apply(this_fill_bid, axis=1)
 
     toc = time() - tic
