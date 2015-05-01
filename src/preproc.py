@@ -59,8 +59,16 @@ if __name__ == '__main__':
         auctions_d=auctions_d,
         bidders_d=bidders_d)
 
-    bids_df = data_io.load_bids(small=False)
+    bids_df = data_io.load_bids(small=True)
     bids_df.apply(this_fill_bid, axis=1)
-
+    
     toc = time() - tic
-    print 'Total time: %g s' % toc
+    print 'Preproc Time: %g s' % toc
+    
+    import cPickle as pickle
+    save_obj = (bidders_d, auctions_d)
+    save_path = '/media/raid_arr/data/fb4/bidders_auctions.p'
+    pickle.dump(save_obj, open(save_path, 'wb'), protocol=-1)
+    
+    toc = time() - tic
+    print 'Total Time: %g s' % toc
