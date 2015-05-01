@@ -12,6 +12,7 @@ make_bidder_test = lambda bidder_row: Bidder(
 
 def fill_bid(bid_row, auctions_d, bidders_d,
              verbose=True):
+    # Initialize bid
     bid = Bid(bid_id=bid_row['bid_id'],
               bidder_id=bid_row['bidder_id'],
               auction_id=bid_row['auction'],
@@ -22,12 +23,19 @@ def fill_bid(bid_row, auctions_d, bidders_d,
               ip=bid_row['ip'],
               url=bid_row['url'],
               )
+    # Create auction entry in dictionary
     if bid.auction_id not in auctions_d.keys():
         auctions_d[bid.auction_id] = Auction(bid.auction_id)
+    # Add bid to auction object
     auctions_d[bid.auction_id].add_bid(bid)
+    # Link to auction in bid object
+    bid.auction = auctions_d[bid.auction_id]
 
     try:
+        # Add bid to history of bidder
         bidders_d[bid.bidder_id].add_bid(bid)
+        # Link to bidder in bid object
+        bid.bidder = bidders_d[bid.bidder_id]
     except KeyError:
         if verbose:
             print 'THERE IS A BID THAT HAS NO BIDDER'
