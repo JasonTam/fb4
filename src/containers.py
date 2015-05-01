@@ -23,10 +23,6 @@ class Bid(object):
         self.ip = ip
         self.url = url
 
-        # Pointers
-        self.bidder = None
-        self.auction = None
-
     def __str__(self):
         return self.bid_id
 
@@ -49,7 +45,7 @@ class Auction(object):
         self.active_range = None
 
     def add_bid(self, bid):
-        self.bids.append(bid)
+        self.bids.append(bid.bid_id)
         # todo
         # add bid to list (keep order by time)
         # update the active range
@@ -75,9 +71,9 @@ class Bidder(object):
 
     def add_bid(self, bid):
         # Ghetto ordered default dict
-        if bid.auction not in self.bids_by_auction.keys():
-            self.bids_by_auction[bid.auction] = []
-        self.bids_by_auction[bid.auction].append(bid)
+        if bid.auction.auction_id not in self.bids_by_auction.keys():
+            self.bids_by_auction[bid.auction.auction_id] = []
+        self.bids_by_auction[bid.auction.auction_id].append(bid.bid_id)
 
     def __str__(self):
         return '\t'.join([
