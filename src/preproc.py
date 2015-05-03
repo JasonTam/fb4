@@ -10,7 +10,7 @@ make_bidder_test = lambda bidder_row: Bidder(
     bidder_row['bidder_id'])
 
 
-def fill_bid(bid_row, auctions_d, bidders_d,
+def fill_bid(bid_row, bids_d, auctions_d, bidders_d,
              verbose=True):
     # Initialize bid
     bid = Bid(bid_id=bid_row['bid_id'],
@@ -23,6 +23,9 @@ def fill_bid(bid_row, auctions_d, bidders_d,
               ip=bid_row['ip'],
               url=bid_row['url'],
               )
+    # Add bid to bid dictionary
+    bids_d[bid.bid_id] = bid
+
     # Create auction entry in dictionary
     if bid.auction_id not in auctions_d.keys():
         auctions_d[bid.auction_id] = Auction(bid.auction_id)
@@ -52,10 +55,12 @@ if __name__ == '__main__':
         {bidder.bidder_id: bidder
          for bidder in test_df.apply(make_bidder_test, axis=1)})
 
+    bids_d = {}
     auctions_d = {}
 
     this_fill_bid = lambda bid_row: fill_bid(
         bid_row=bid_row,
+        bids_d=bids_d,
         auctions_d=auctions_d,
         bidders_d=bidders_d)
 
@@ -66,8 +71,8 @@ if __name__ == '__main__':
     print 'Preproc Time: %g s' % toc
     
     import cPickle as pickle
-    save_obj = (bidders_d, auctions_d)
-    save_path = '/media/raid_arr/data/fb4/bidders_auctions.p'
+    save_obj = (bids_d, bidders_d, auctions_d)
+    save_path = '/media/raid_arr/data/fb4/bids_bidders_auctions.p'
     pickle.dump(save_obj, open(save_path, 'wb'), protocol=-1)
     
     toc = time() - tic
