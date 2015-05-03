@@ -38,3 +38,8 @@ def save_encoders(enc_dict, name='encoders.p'):
 def load_encoders(name='encoders.p'):
     p = os.path.join(SAVED_DIR, name)
     return pickle.load(open(p, 'rb'))
+
+
+def load_bidders_auctions():
+    p = os.path.join(SAVED_DIR, 'bidders_auctions.p')
+    return pickle.load(open(p, 'rb'))
