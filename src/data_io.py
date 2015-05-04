@@ -2,6 +2,7 @@ import csv
 import os
 import pandas as pd
 import cPickle as pickle
+import shelve
 
 CURDIR = os.path.dirname(__file__)
 DATA_DIR = os.path.join(CURDIR, '../data')
@@ -11,6 +12,7 @@ TRAIN_PATH = os.path.join(DATA_DIR, 'train.csv')
 TEST_PATH = os.path.join(DATA_DIR, 'test.csv')
 BIDS_PATH = os.path.join(DATA_DIR, 'bids.csv')
 SMALL_BIDS_PATH = os.path.join(DATA_DIR, 'small_bids.csv')
+BIDS_SHELF_PATH = '/media/raid_arr/data/fb4/bids.db'
 
 
 def load_bids(small=False):
@@ -43,3 +45,13 @@ def load_encoders(name='encoders.p'):
 def load_bidders_auctions():
     p = os.path.join(SAVED_DIR, 'bidders_auctions.p')
     return pickle.load(open(p, 'rb'))
+
+
+def shelve_bid(bid, db):
+    """ Shelve a bid object
+    MUST be called in a `with shelve.open(***) as db` wrapper
+    rather than inside this function
+    :param bid: bid object
+    :param db: db to shove into
+    """
+    db[bid.bid_id] = bid
