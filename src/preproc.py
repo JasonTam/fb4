@@ -47,7 +47,7 @@ def fill_bid(bid_row, auctions_d, bidders_d,
     pass
 
 if __name__ == '__main__':
-    save_ba = False
+    save_ba = True
 
     tic = time()
     train_df = data_io.load_train()
@@ -65,7 +65,7 @@ if __name__ == '__main__':
         auctions_d=auctions_d,
         bidders_d=bidders_d)
 
-    bid_db = shelve.open(data_io.BIDS_SHELF_PATH)
+    bid_db = shelve.open(data_io.BIDS_SHELF_PATH, protocol=2)
     bids_df = data_io.load_bids(small=False)
     bids_df.apply(this_fill_bid, axis=1)
     bid_db.close()

@@ -16,10 +16,12 @@ BIDS_SHELF_PATH = '/media/raid_arr/data/fb4/bids.db'
 
 
 def load_bids(small=False):
+    # Make bid_id a str so that we can use it as shelve key
+    readcsv = lambda p: pd.io.parsers.read_csv(p, dtype={'bid_id':str})
     if small:
-        bids_df = pd.io.parsers.read_csv(SMALL_BIDS_PATH)
+        bids_df = readcsv(SMALL_BIDS_PATH)
     else:
-        bids_df = pd.io.parsers.read_csv(BIDS_PATH)
+        bids_df = readcsv(BIDS_PATH)
     return bids_df.fillna('nan')  # Replace NaN float with 'nan' str
 
 
