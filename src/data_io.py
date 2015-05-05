@@ -45,7 +45,8 @@ def load_encoders(name='encoders.p'):
 
 
 def load_bidders_auctions():
-    p = os.path.join(SAVED_DIR, 'bidders_auctions.p')
+    # p = os.path.join(SAVED_DIR, 'bidders_auctions.p')
+    p = os.path.join('/media/raid_arr/data/fb4/bidders_auctions.p')
     return pickle.load(open(p, 'rb'))
 
 
