@@ -75,9 +75,11 @@ if __name__ == '__main__':
 
     if save_ba:
         import cPickle as pickle
+        import gzip
         save_obj = (bidders_d, auctions_d)
-        save_path = '/media/raid_arr/data/fb4/bidders_auctions.p'
-        pickle.dump(save_obj, open(save_path, 'wb'), protocol=-1)
+        # save_path = '/media/raid_arr/data/fb4/bidders_auctions.p'
+        save_path = '~/documents/fb4/bidders_auctions.pgz'
+        pickle.dump(save_obj, gzip.open(save_path, 'wb'), protocol=-1)
 
         toc = time() - tic
         print 'Total Time: %g s' % toc

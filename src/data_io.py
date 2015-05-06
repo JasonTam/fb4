@@ -2,6 +2,7 @@ import csv
 import os
 import pandas as pd
 import cPickle as pickle
+import gzip
 import shelve
 
 CURDIR = os.path.dirname(__file__)
@@ -10,6 +11,7 @@ SUBS_DIR = os.path.join(CURDIR, '../submissions')
 SAVED_DIR = os.path.join(CURDIR, '../saved')
 TRAIN_PATH = os.path.join(DATA_DIR, 'train.csv')
 TEST_PATH = os.path.join(DATA_DIR, 'test.csv')
+BIDDERS_AUCTIONS_PATH = os.path.join(SAVED_DIR, 'bidders_auctions.pgz')
 BIDS_PATH = os.path.join(DATA_DIR, 'bids.csv')
 SMALL_BIDS_PATH = os.path.join(DATA_DIR, 'small_bids.csv')
 BIDS_SHELF_PATH = '/media/raid_arr/data/fb4/bids.db'
@@ -46,8 +48,9 @@ def load_encoders(name='encoders.p'):
 
 def load_bidders_auctions():
     # p = os.path.join(SAVED_DIR, 'bidders_auctions.p')
-    p = os.path.join('/media/raid_arr/data/fb4/bidders_auctions.p')
-    return pickle.load(open(p, 'rb'))
+    # p = os.path.join('/media/raid_arr/data/fb4/bidders_auctions.p')
+    # return pickle.load(open(p, 'rb'))
+    return pickle.load(gzip.open(BIDDERS_AUCTIONS_PATH, 'rb'))
 
 
 def shelve_bid(bid, db):

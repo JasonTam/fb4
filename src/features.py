@@ -20,3 +20,12 @@ import numpy as np
 # true bot)
 # Though sniping behavior does not necessarily mean a bidder
 # is a bot
+
+
+# Number of bids per auction won
+# number of bids per auction lost
+# maybe count consecutive bids as 1
+
+# number of unique devices/IP's/country per auction (maybe scaled by number of bids))
+
+# win rate
