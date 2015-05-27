@@ -18,6 +18,8 @@ BIDS_SHELF_PATH = '/media/raid_arr/data/fb4/bids.db'
 
 
 def load_bids(small=False):
+    # maybe consider reading with index_col=0?
+    
     # Make bid_id a str so that we can use it as shelve key
     readcsv = lambda p: pd.io.parsers.read_csv(p, dtype={'bid_id':str})
     if small:

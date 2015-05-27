@@ -10,12 +10,12 @@ class Bid(object):
 
     def __init__(self,
                  bid_id, bidder_id,
-                 auction_id, merchandise,
+                 auction, merchandise,
                  device, time, country,
                  ip, url):
         self.bid_id = bid_id
         self.bidder_id = bidder_id
-        self.auction_id = auction_id
+        self.auction_id = auction
         self.merchandise = Encoders['merchandise'].transform((merchandise,))[0]
         self.device = device.replace('phone', '')
         self.time = time
