@@ -6,6 +6,10 @@ from contextlib import closing
 import shelve
 import os
 from itertools import groupby
+from joblib import Parallel, delayed
+import sqlite3
+
+from itertools import izip_longest, chain
 
 # ## Macro features
 # behavioral change of micro features over a macro scale
@@ -37,6 +41,8 @@ from itertools import groupby
 # win rate
 
 # number of bids in a given window
+
+# number of times you bid over yourself
 
 from sklearn.base import BaseEstimator, TransformerMixin
 
@@ -161,61 +167,97 @@ class PeakBids():
     # Peak number of bids and the diversity during that peak
     # Peak diversity can also be found in a period that is not during the peak bids
     # Should probably run this with various window sizes
-    def __init__(self, bids_df, win_sz=1e10):
+    def __init__(self, bids_df=None, win_sz=1e10):
         self.bids_shelf_path = data_io.BIDS_SHELF_PATH
         self.bids_df = bids_df
         
         self.win_sz = win_sz
         self.step = win_sz/2.  # Half overlap
 
-    def transform(self, bidders, verbose=False):
+    def transform(self, bidders, n_jobs=1, verbose=False):
         # too lazy to replace
         step = self.step
         win_sz = self.win_sz
         
         rets = []
-        for ii, bidder in enumerate(bidders):
-            # If the bidder has bids... -_-
-            if len(bidder.bids_by_auction.values()):
-                all_bids = np.concatenate(bidder.bids_by_auction.values())
-                
-                #with closing(shelve.open(self.bids_shelf_path, protocol=2)) as bids_db:
-                #    bids = [bids_db[bid_id] for bid_id in all_bids]
-                bids = [Bid(**self.bids_df.loc[int(bid_id)]) 
-                        for bid_id in all_bids]
-                
-                t = np.array([bid.time for bid in bids])
-                aucts = [bid.auction_id for bid in bids]
+        if n_jobs == 1:
+            for ii, bidder in enumerate(bidders):
+                ret = get_peak_feats(bidder, win_sz, step, self.bids_df)
 
-                n_bids_in_win = [1]
-                unique_aucts_in_win = [1]
-                for win_start in range(int(t.min()//step*step), int((t.max()//step)*step), int(step)):
-                    t_in_win = (t > win_start) & (t < win_start+win_sz)
-                    aucts_in_win = [auct for auct, t_i in zip(aucts, t_in_win) if t_i]
-                    n_bids_in_win.append(np.sum(t_in_win))
-                    unique_aucts_in_win.append(len(set(aucts_in_win)))
+                rets.append(ret)
 
-                n_bids_in_win = np.array(n_bids_in_win)
-                unique_aucts_in_win = np.array(unique_aucts_in_win)
-
-                ret = np.array([
-                        n_bids_in_win.max(),
-                        np.std(n_bids_in_win),
-                        unique_aucts_in_win[np.argmax(n_bids_in_win)],
-                        unique_aucts_in_win[np.argmax(n_bids_in_win)]/float(n_bids_in_win.max()),
-                        unique_aucts_in_win.max(),
-                        unique_aucts_in_win.max()/float(n_bids_in_win[np.argmax(unique_aucts_in_win)]),
-                    ])
-            else:
-                ret = np.zeros(6)
-            
-            rets.append(ret)
-            
-            if verbose:
-                print '\r %d / %d' % (ii+1, len(bidders)),
+                if verbose:
+                    print '\r %d / %d' % (ii+1, len(bidders)),
+        else:
+            rets = Parallel(n_jobs=n_jobs)(delayed(get_peak_feats)(bidder, win_sz, step, none) 
+                                          for bidder in bidders)
             
         return np.array(rets)
+
     
+def get_peak_feats(bidder, win_sz, step, bids_df=None):
+    db_path = '/media/raid_arr/data/fb4/bids.sql'
+    conn = sqlite3.connect(db_path, check_same_thread=False)
+    c = conn.cursor()
+    
+    # This takes too much memory without some db with concurrent access
+    # Else, it just pickles the huge bids_df object
+    # If the bidder has bids... -_-
+    if len(bidder.bids_by_auction.values()):
+        all_bids = np.concatenate(bidder.bids_by_auction.values())
+
+        #with closing(shelve.open(self.bids_shelf_path, protocol=2)) as bids_db:
+        #    bids = [bids_db[bid_id] for bid_id in all_bids]
+        
+        if bids_df is not None:
+            bids = [Bid(**bids_df.loc[int(bid_id)]) 
+                    for bid_id in all_bids]
+        else:
+            chunk_sz = 512
+            bids_id_chunks = list(grouper(all_bids, chunk_sz, fillvalue=None))
+            bids_chunk_list = []
+            for bid_id_chunks in bids_id_chunks:
+
+                q = 'SELECT * FROM bids WHERE bid_id IN ({seq})'\
+                        .format(seq=','.join(['?']*len(bid_id_chunks)))
+                try:
+                    c.execute(q, bid_id_chunks)
+                except:
+                    import pdb; pdb.set_trace()
+                bid_rows = c.fetchall()
+                bids_chunk = [Bid(*bid_row) for bid_row in bid_rows]
+                bids_chunk_list.append(bids_chunk)
+
+            bids = list(chain(*bids_chunk_list))
+
+        t = np.array([bid.time for bid in bids])
+        aucts = [bid.auction_id for bid in bids]
+
+        n_bids_in_win = [1]
+        unique_aucts_in_win = [1]
+        for win_start in range(int(t.min()//step*step), int((t.max()//step)*step), int(step)):
+            t_in_win = (t > win_start) & (t < win_start+win_sz)
+            aucts_in_win = [auct for auct, t_i in zip(aucts, t_in_win) if t_i]
+            n_bids_in_win.append(np.sum(t_in_win))
+            unique_aucts_in_win.append(len(set(aucts_in_win)))
+
+        n_bids_in_win = np.array(n_bids_in_win)
+        unique_aucts_in_win = np.array(unique_aucts_in_win)
+
+        ret = np.array([
+                n_bids_in_win.max(),
+                np.std(n_bids_in_win),
+                unique_aucts_in_win[np.argmax(n_bids_in_win)],
+                unique_aucts_in_win[np.argmax(n_bids_in_win)]/float(n_bids_in_win.max()),
+                unique_aucts_in_win.max(),
+                unique_aucts_in_win.max()/float(n_bids_in_win[np.argmax(unique_aucts_in_win)]),
+            ])
+        #print ret
+    else:
+        ret = np.zeros(6)
+    conn.close()
+    return ret
+
 
 def get_streak(l):
     """Gives the value of the longest streak and its streak length"""
@@ -227,6 +269,10 @@ def get_streak(l):
     streak = chains[np.argmax(np.array(chains), axis=0)[1], :]
     return streak[0], int(streak[1])
 
+
+def grouper(iterable, n, fillvalue=None):
+    args = [iter(iterable)] * n
+    return izip_longest(*args, fillvalue=fillvalue)
 
         
         
