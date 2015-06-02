@@ -193,7 +193,31 @@ class PeakBids():
                                           for bidder in bidders)
             
         return np.array(rets)
+    
+    
+class CountAttBids():
+    # Peak number of bids and the diversity during that peak
+    # Peak diversity can also be found in a period that is not during the peak bids
+    # Should probably run this with various window sizes
+    def __init__(self, bids_df=None, win_sz=1e10):
+        self.bids_shelf_path = data_io.BIDS_SHELF_PATH
+        self.bids_df = bids_df
+        
+    def transform(self, bidders, n_jobs=1, verbose=False):        
+        rets = []
+        if n_jobs == 1:
+            for ii, bidder in enumerate(bidders):
+                ret = get_count_feats(bidder, self.bids_df)
 
+                rets.append(ret)
+
+                if verbose:
+                    print '\r %d / %d' % (ii+1, len(bidders)),
+        else:
+            rets = Parallel(n_jobs=n_jobs)(delayed(get_count_feats)(bidder, none) 
+                                          for bidder in bidders)
+            
+        return np.array(rets)
     
 def get_peak_feats(bidder, win_sz, step, bids_df=None):
     db_path = '/media/raid_arr/data/fb4/bids.sql'
@@ -255,6 +279,62 @@ def get_peak_feats(bidder, win_sz, step, bids_df=None):
         #print ret
     else:
         ret = np.zeros(6)
+    conn.close()
+    return ret
+
+
+def get_count_feats(bidder, bids_df=None):
+    db_path = '/media/raid_arr/data/fb4/bids.sql'
+    conn = sqlite3.connect(db_path, check_same_thread=False)
+    c = conn.cursor()
+    
+    # This takes too much memory without some db with concurrent access
+    # Else, it just pickles the huge bids_df object
+    # If the bidder has bids... -_-
+    if len(bidder.bids_by_auction.values()):
+        all_bids = np.concatenate(bidder.bids_by_auction.values())
+
+        #with closing(shelve.open(self.bids_shelf_path, protocol=2)) as bids_db:
+        #    bids = [bids_db[bid_id] for bid_id in all_bids]
+        
+        if bids_df is not None:
+            bids = [Bid(**bids_df.loc[int(bid_id)]) 
+                    for bid_id in all_bids]
+        else:
+            chunk_sz = 512
+            bids_id_chunks = list(grouper(all_bids, chunk_sz, fillvalue=None))
+            bids_chunk_list = []
+            for bid_id_chunks in bids_id_chunks:
+
+                q = 'SELECT * FROM bids WHERE bid_id IN ({seq})'\
+                        .format(seq=','.join(['?']*len(bid_id_chunks)))
+                try:
+                    c.execute(q, bid_id_chunks)
+                except:
+                    import pdb; pdb.set_trace()
+                bid_rows = c.fetchall()
+                bids_chunk = [Bid(*bid_row) for bid_row in bid_rows]
+                bids_chunk_list.append(bids_chunk)
+
+            bids = list(chain(*bids_chunk_list))
+        
+        device_counts = np.zeros(7500)
+        country_counts = np.zeros(200)
+        merch_counts = np.zeros(10)
+        for bid in bids:
+            device_counts[int(bid.device)] += 1
+            country_counts[int(bid.country)] += 1
+            merch_counts[int(bid.merchandise)] += 1
+
+        
+        ret = np.concatenate([
+                device_counts,
+                country_counts,
+                merch_counts,
+            ])
+        #print ret
+    else:
+        ret = np.zeros(7710)
     conn.close()
     return ret
 
