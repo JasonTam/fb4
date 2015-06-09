@@ -1,7 +1,12 @@
 # fb4
+See the competition details here:
+https://www.kaggle.com/c/facebook-recruiting-iv-human-or-bot
+
 
 Features
-=======
+========
+7862 total features were used. (Most of these are just useless device counts)
+
 Simple stats (mean, std, min, max) computed over the following features:
 
 * Diversity
@@ -38,7 +43,7 @@ Simple stats (mean, std, min, max) computed over the following features:
 
 Model
 =====
-Simple average of extra-trees, gradient boosted trees, neural net.
+Simple average of extra-trees, gradient boosted trees, neural net. For the neural net, I used the top 1000 features as prioritized by the extra-trees classifier.
 
 Other
 =====
