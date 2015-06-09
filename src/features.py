@@ -44,6 +44,15 @@ from itertools import izip_longest, chain
 
 # number of times you bid over yourself
 
+# in addition to the peak number of bids in a given window
+    # also count the number of auctions being participated in for a given window
+    
+# time between the current bid and the last bid
+    # mode of this -- and maybe the ratio of bids with this
+    # mean, std
+    
+    
+
 from sklearn.base import BaseEstimator, TransformerMixin
 
 
@@ -354,6 +363,26 @@ def grouper(iterable, n, fillvalue=None):
     args = [iter(iterable)] * n
     return izip_longest(*args, fillvalue=fillvalue)
 
-        
+
+def get_firstlast_feats():
+    firstlast_d = {bidder_id: np.zeros(2) for bidder_id in bidders_d.keys()}
+    
+    tic = time()
+
+    for ii, a in enumerate(auctions_d.values()):
+        first_id = a.bids[0]
+        last_id = a.bids[-1]
+        with closing(shelve.open(data_io.BIDS_SHELF_PATH, protocol=2)) as bids_db:
+            first_bid = bids_db[first_id]
+            last_bid = bids_db[last_id]
+            firstlast_d[first_bid.bidder_id] += np.array([1, 0])
+            firstlast_d[last_bid.bidder_id] += np.array([0, 1])
+
+        print '\r %d / %d' % (ii+1, len(auctions_d)),
+    toc = time() -tic
+    print toc
+    
+    pickle.dump(firstlast_d, open('../data/firstlast_feats.p', 'wb'))
+    return firstlast_d
         
         

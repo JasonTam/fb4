@@ -54,6 +54,10 @@ class ArcsinhTformer(FitlessMixin):
     def transform(self, X, y=None, **fit_params):
         return np.log(X + np.sqrt(X**2 + 1))
     
+class AbsTformer(FitlessMixin):
+    def transform(self, X, y=None, **fit_params):
+        return np.abs(X)
+    
 class BoxCoxTformer(TransformerMixin, BaseEstimator):
     def __init__(self):
         self.lambdas = None
